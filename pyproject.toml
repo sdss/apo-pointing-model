@@ -1,0 +1,62 @@
+[tool.poetry]
+name = "sdss-apo-pointing-model"
+version = "0.1.0a0"
+description = "Tools for APO pointing models"
+authors = ["José Sánchez-Gallego <gallegoj@uw.edu>"]
+license = "BSD-3-Clause"
+readme = "README.md"
+homepage = "https://github.com/sdss/apo-pointing-model"
+repository = "https://github.com/sdss/apo-pointing-model"
+keywords = ["astronomy", "software"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+	"Programming Language :: Python :: 3.6",
+	"Programming Language :: Python :: 3.7",
+	"Programming Language :: Python :: 3.8",
+    "Topic :: Documentation :: Sphinx",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+packages = [
+    { include = "apo_pointing_model", from = "src" }
+]
+include = []
+
+[tool.poetry.scripts]
+apo-pointing-model = "apo_pointing_model.__main__:apo_pointing_model"
+
+[tool.poetry.dependencies]
+python = "^3.10,<4.0"
+sdsstools = "^1"
+sdss-clu = "^2.2.7"
+
+[tool.poetry.group.dev.dependencies]
+ipython = ">=8.0.0"
+ipdb = ">=0.12.3"
+ruff = ">=0.5.0"
+
+[tool.ruff]
+line-length = 88
+target-version = 'py312'
+exclude = ["typings/"]
+
+[ruff.lint]
+select = ["E", "F", "I"]
+unfixable = ["F841"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "F403", "E402"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["apo_pointing_model"]
+lines-after-imports = 2
+section-order = ["future", "standard-library", "typing", "third-party", "sdss", "first-party", "local-folder"]
+
+[tool.ruff.lint.isort.sections]
+typing = ["typing"]
+sdss = ["sdsstools"]
+
+[build-system]
+requires = ["poetry-core>=1.1.0"]
+build-backend = "poetry.core.masonry.api"
