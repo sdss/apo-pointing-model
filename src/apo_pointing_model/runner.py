@@ -59,8 +59,6 @@ async def get_pointing_data(
 ):
     """Collects pointing model data."""
 
-    log.sh.setLevel(5)
-
     output_file = pathlib.Path(output_file)
 
     if output_file.exists() and not overwrite:
