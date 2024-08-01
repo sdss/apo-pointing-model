@@ -91,11 +91,41 @@ async def get_pointing_data(
     az_range: tuple[float, float] = (0, 359),
     write_log: bool = True,
 ):
-    """Collects pointing model data."""
+    """Collects pointing model data.
+
+    Parameters
+    ----------
+    npoints
+        The number of grid points to collect.
+    output_file
+        The output file. If the file exists and ``overwrite=False``, the grid will
+        be read from the file. The file will be written in Parquet format so it is
+        expected to have ``.parquet`` extension.
+    overwrite
+        If True, overwrites the output file if it exists.
+    write_csv
+        If True, writes the output to a CSV file as well.
+    alt_range
+        The range of altitudes to sample.
+    az_range
+        The range of azimuths to sample.
+    write_log
+        If True, writes a log file with the same name as the output file but with
+        the extension replaced to ``.log``
+
+    Returns
+    -------
+    df
+        A Polars DataFrame with the pointing model data.
+
+    """
 
     output_file = pathlib.Path(output_file)
+
     if write_log:
         log.start_file_logger(str(output_file.with_suffix(".log")), rotating=False)
+
+    ### Recover pointing grid or create a new one. ###
 
     if output_file.exists() and not overwrite:
         log.warning(f"Found file {output_file!s}. NOT generating a new grid.")
@@ -113,6 +143,8 @@ async def get_pointing_data(
 
         write_data(data, output_file, write_csv=write_csv)
 
+    ### Create Tron connection and instantiate TCC helper. ###
+
     log.info("Creating connection to Tron and waiting for keys.")
     tron = TronConnection(
         "APO.pointing_model",
@@ -125,6 +157,8 @@ async def get_pointing_data(
     # Copy of the HAL TCC helper for slewing.
     tcc = TCCHelper(tron)
 
+    ### Loop over the data and solve the fields. ###
+
     for irow, pdata in enumerate(data):
         if pdata.done or pdata.failed:
             log.warning(f"Skipping row {irow!r} as it is already done or failed.")
@@ -136,6 +170,8 @@ async def get_pointing_data(
         ra, dec = to_icrs(alt, az)
         pdata.ra = ra
         pdata.dec = dec
+
+        ### Slew to the target. ###
 
         log.warning(f"Slewing to target #{irow+1}: RA={ra:.4f}, Dec={dec:.4f}.")
 
@@ -154,6 +190,8 @@ async def get_pointing_data(
             "jaeger",
             f"configuration fake-field {ra} {dec} 0.0",
         )
+
+        ### Solve the field. ###
 
         log.info("Astrometrically solving the field with cherno.")
         exp_time: float = 5
@@ -204,6 +242,11 @@ async def get_pointing_data(
             pdata.offset_rot = float(astrometry_fit[9])
             pdata.tai_ref = float(tai0 + exp_time / 2)
 
+            # Override MJD in case the pointing is done at some other point in time
+            pdata.mjd = get_sjd("APO")
+
+            ### Run ptcorr to get the pointing corrections. ###
+
             log.info("Retrieving pdata.")
 
             ptcorr_string = f"ptcorr {pdata.ra_bore}, {pdata.dec_bore} icrs 0,0,0,0,{pdata.tai_ref} instrument"
@@ -233,7 +276,10 @@ async def get_pointing_data(
 
             break
 
+        ### Update data and write to disk. ###
         write_data(data, output_file, write_csv=write_csv)
+
+    return data
 
 
 def write_data(
