@@ -8,7 +8,14 @@
 
 from __future__ import annotations
 
+import warnings
+
+from clu.exceptions import CluWarning
+
 from sdsstools import get_logger, get_package_version
+
+
+warnings.simplefilter("ignore", category=CluWarning)
 
 
 NAME = "sdss-apo-pointing-model"

@@ -30,6 +30,9 @@ apo-pointing-model = "apo_pointing_model.__main__:apo_pointing_model"
 python = "^3.10,<4.0"
 sdsstools = "^1"
 sdss-clu = "^2.2.7"
+astropy = "^6.1.2"
+polars = "^1.3.0"
+pydantic = "^2.8.2"
 
 [tool.poetry.group.dev.dependencies]
 ipython = ">=8.0.0"
