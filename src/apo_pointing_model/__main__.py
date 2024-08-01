@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import logging
+import pathlib
 
 import click
 
@@ -29,12 +30,46 @@ def apo_pointing_model(verbose: bool = False):
 
 
 @apo_pointing_model.command()
-@click.argument("N_POINTS", type=int)
 @click.argument("OUTPUT_FILE", type=click.Path(dir_okay=True))
+@click.argument("N_POINTS", type=int, required=False)
+@click.option(
+    "-a",
+    "--alt-range",
+    nargs=2,
+    type=float,
+    default=(28, 85),
+    show_default=True,
+    help="Altitude range.",
+)
+@click.option(
+    "-z",
+    "--az-range",
+    nargs=2,
+    type=float,
+    default=(0, 359),
+    show_default=True,
+    help="Azimuth range.",
+)
 @cli_coro()
-async def run(n_points: int, output_file: str):
+async def run(
+    n_points: int | None,
+    output_file: str,
+    alt_range: tuple[float, float],
+    az_range: tuple[float, float],
+):
     """Collects APO pointing model data."""
 
     from apo_pointing_model.runner import get_pointing_data
 
-    await get_pointing_data(n_points, output_file)
+    path_ = pathlib.Path(output_file)
+    if not path_.exists() and n_points is None:
+        raise click.BadArgumentUsage(
+            "N_POINTS is required if OUTPUT_FILE does not exist."
+        )
+
+    await get_pointing_data(
+        n_points,
+        output_file,
+        alt_range=alt_range,
+        az_range=az_range,
+    )
