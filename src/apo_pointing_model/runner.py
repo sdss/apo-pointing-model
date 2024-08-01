@@ -23,6 +23,35 @@ from apo_pointing_model.sample import get_random_sample, to_icrs
 from apo_pointing_model.tcc import TCCHelper
 
 
+SCHEMA: dict[str, polars.DataTypeClass] = {
+    "alt": polars.Float64,
+    "az": polars.Float64,
+    "rot": polars.Float64,
+    "ra": polars.Float64,
+    "dec": polars.Float64,
+    "done": polars.Boolean,
+    "failed": polars.Boolean,
+    "mjd": polars.Int32,
+    "gimg": polars.Int32,
+    "n_cameras_solved": polars.Int32,
+    "ra_bore": polars.Float64,
+    "dec_bore": polars.Float64,
+    "offset_ra": polars.Float64,
+    "offset_dec": polars.Float64,
+    "offset_rot": polars.Float64,
+    "tai_ref": polars.Float64,
+    "ptcorr_azcorr": polars.Float64,
+    "ptcorr_altcorr": polars.Float64,
+    "ptcorr_xpos": polars.Float64,
+    "ptcorr_ypos": polars.Float64,
+    "ptdata_azphys": polars.Float64,
+    "ptdata_altphys": polars.Float64,
+    "ptdata_azmount": polars.Float64,
+    "ptdata_altmount": polars.Float64,
+    "ptdata_rotphys": polars.Float64,
+}
+
+
 class PointingData(BaseModel):
     """Pointing model data."""
 
@@ -226,36 +255,7 @@ def write_data(
 
     """
 
-    data_df = polars.DataFrame(
-        [d.model_dump() for d in data],
-        schema={
-            "alt": polars.Float64,
-            "az": polars.Float64,
-            "rot": polars.Float64,
-            "ra": polars.Float64,
-            "dec": polars.Float64,
-            "done": polars.Boolean,
-            "failed": polars.Boolean,
-            "mjd": polars.Int32,
-            "gimg": polars.Int32,
-            "n_cameras_solved": polars.Int32,
-            "ra_bore": polars.Float64,
-            "dec_bore": polars.Float64,
-            "offset_ra": polars.Float64,
-            "offset_dec": polars.Float64,
-            "offset_rot": polars.Float64,
-            "tai_ref": polars.Float64,
-            "ptcorr_azcorr": polars.Float64,
-            "ptcorr_altcorr": polars.Float64,
-            "ptcorr_xpos": polars.Float64,
-            "ptcorr_ypos": polars.Float64,
-            "ptdata_azphys": polars.Float64,
-            "ptdata_altphys": polars.Float64,
-            "ptdata_azmount": polars.Float64,
-            "ptdata_altmount": polars.Float64,
-            "ptdata_rotphys": polars.Float64,
-        },
-    )
+    data_df = polars.DataFrame([d.model_dump() for d in data], schema=SCHEMA)
     data_df.write_parquet(output_file)
 
     if write_csv:
