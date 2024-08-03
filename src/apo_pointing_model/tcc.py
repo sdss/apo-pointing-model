@@ -47,6 +47,7 @@ class HALHelper:
         if self.tron is None or self.tron.connected() is False:
             raise RuntimeError("Not connected to Tron. Cannot send commands.")
 
+        log.debug(f"Sending command '{target} {cmd_str}'.")
         cmd = await self.tron.send_command(target, cmd_str, **kwargs)
 
         if raise_on_fail and cmd.status.did_fail:

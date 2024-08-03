@@ -40,6 +40,9 @@ SCHEMA: dict[str, polars.DataTypeClass] = {
     "offset_dec": polars.Float64,
     "offset_rot": polars.Float64,
     "tai_ref": polars.Float64,
+}
+
+PTCORR_SCHEMA: dict[str, polars.DataTypeClass] = {
     "ptcorr_azcorr": polars.Float64,
     "ptcorr_altcorr": polars.Float64,
     "ptcorr_xpos": polars.Float64,
@@ -49,6 +52,12 @@ SCHEMA: dict[str, polars.DataTypeClass] = {
     "ptdata_azmount": polars.Float64,
     "ptdata_altmount": polars.Float64,
     "ptdata_rotphys": polars.Float64,
+}
+
+PTCORR_COMMANDS = {
+    "": "ptcorr {ra_bore}, {dec_bore} icrs 0,0,0,0,{tai_ref} instrument",
+    "_512_512": "ptcorr {ra_bore}, {dec_bore} icrs 512,512,0,0,{tai_ref} instrument",
+    "_icrs": "ptcorr {ra}, {dec} icrs {ra_bore}, {dec_bore} icrs",
 }
 
 
@@ -71,15 +80,6 @@ class PointingData(BaseModel):
     offset_ra: float | None = None
     offset_dec: float | None = None
     offset_rot: float | None = None
-    ptcorr_azcorr: float | None = None
-    ptcorr_altcorr: float | None = None
-    ptcorr_xpos: float | None = None
-    ptcorr_ypos: float | None = None
-    ptdata_azphys: float | None = None
-    ptdata_altphys: float | None = None
-    ptdata_azmount: float | None = None
-    ptdata_altmount: float | None = None
-    ptdata_rotphys: float | None = None
 
 
 async def get_pointing_data(
@@ -249,26 +249,35 @@ async def get_pointing_data(
 
             log.info("Retrieving pdata.")
 
-            ptcorr_string = f"ptcorr {pdata.ra_bore}, {pdata.dec_bore} icrs 0,0,0,0,{pdata.tai_ref} instrument"
-            log.debug(f"Running command tcc {ptcorr_string!r}.")
+            for suffix, ptcorr_string in PTCORR_COMMANDS.items():
+                ptcorr_string = ptcorr_string.format(
+                    ra=ra,
+                    dec=dec,
+                    ra_bore=pdata.ra_bore,
+                    dec_bore=pdata.dec_bore,
+                    tai_ref=pdata.tai_ref,
+                )
 
-            pdata_cmd = await tron.send_command(
-                "tcc",
-                ptcorr_string,
-                callback=log_reply,
-            )
+                log.debug(f"Running command '{ptcorr_string}'.")
 
-            ptcorr = pdata_cmd.replies.get("ptcorr")
-            ptdata = pdata_cmd.replies.get("ptdata")
-            pdata.ptcorr_azcorr = ptcorr[0]
-            pdata.ptcorr_altcorr = ptcorr[1]
-            pdata.ptcorr_xpos = ptcorr[2]
-            pdata.ptcorr_ypos = ptcorr[3]
-            pdata.ptdata_azphys = ptdata[0]
-            pdata.ptdata_altphys = ptdata[1]
-            pdata.ptdata_azmount = ptdata[2]
-            pdata.ptdata_altmount = ptdata[3]
-            pdata.ptdata_rotphys = ptdata[4]
+                pdata_cmd = await tron.send_command(
+                    "tcc",
+                    ptcorr_string,
+                    callback=log_reply,
+                )
+
+                ptcorr = pdata_cmd.replies.get("ptcorr")
+                ptdata = pdata_cmd.replies.get("ptdata")
+
+                setattr(pdata, f"ptcorr_azcorr{suffix}", ptcorr[0])
+                setattr(pdata, f"ptcorr_altcorr{suffix}", ptcorr[1])
+                setattr(pdata, f"ptcorr_xpos{suffix}", ptcorr[2])
+                setattr(pdata, f"ptcorr_ypos{suffix}", ptcorr[3])
+                setattr(pdata, f"ptdata_azphys{suffix}", ptdata[0])
+                setattr(pdata, f"ptdata_altphys{suffix}", ptdata[1])
+                setattr(pdata, f"ptdata_azmount{suffix}", ptdata[2])
+                setattr(pdata, f"ptdata_altmount{suffix}", ptdata[3])
+                setattr(pdata, f"ptdata_rotphys{suffix}", ptdata[4])
 
             pdata.done = True
 
@@ -301,7 +310,11 @@ def write_data(
 
     """
 
-    data_df = polars.DataFrame([d.model_dump() for d in data], schema=SCHEMA)
+    schema = SCHEMA.copy()
+    for suffix in PTCORR_COMMANDS:
+        schema.update({f"{k}{suffix}": v for k, v in PTCORR_SCHEMA.items()})
+
+    data_df = polars.DataFrame([d.model_dump() for d in data], schema=schema)
     data_df.write_parquet(output_file)
 
     if write_csv:
