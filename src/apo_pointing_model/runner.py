@@ -85,6 +85,7 @@ class PointingData(BaseModel):
 async def get_pointing_data(
     npoints: int | None,
     output_file: str | pathlib.Path,
+    reuse_file: bool = True,
     overwrite: bool = False,
     write_csv: bool = True,
     alt_range: tuple[float, float] = (28, 85),
@@ -101,6 +102,9 @@ async def get_pointing_data(
         The output file. If the file exists and ``overwrite=False``, the grid will
         be read from the file. The file will be written in Parquet format so it is
         expected to have ``.parquet`` extension.
+    reuse_file
+        If True, will reuse the file if it exists and will not generate a new grid.
+        If False and the file exists, it will raise an error unless ``overwrite=True``.
     overwrite
         If True, overwrites the output file if it exists.
     write_csv
@@ -127,11 +131,14 @@ async def get_pointing_data(
 
     ### Recover pointing grid or create a new one. ###
 
-    if output_file.exists() and not overwrite:
+    if output_file.exists() and reuse_file:
         log.warning(f"Found file {output_file!s}. NOT generating a new grid.")
         data_df = polars.read_parquet(output_file)
         data = [PointingData(**row) for row in data_df.to_dicts()]
     else:
+        if overwrite is False:
+            raise FileExistsError("output_file exists and overwrite=False.")
+
         if npoints is None:
             raise ValueError("npoints is required if output_file does not exist.")
 

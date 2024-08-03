@@ -16,22 +16,10 @@ import click
 from sdsstools.daemonizer import cli_coro
 
 
-@click.group()
-@click.option("-v", "--verbose", is_flag=True, help="Shows verbose output.")
-def apo_pointing_model(verbose: bool = False):
-    """Command-line interface to the APO pointing model."""
-
-    from apo_pointing_model import log
-
-    if verbose:
-        log.sh.setLevel(logging.DEBUG)
-    else:
-        log.sh.setLevel(logging.INFO)
-
-
-@apo_pointing_model.command()
+@click.command()
 @click.argument("OUTPUT_FILE", type=click.Path(dir_okay=True))
 @click.argument("N_POINTS", type=int, required=False)
+@click.option("-v", "--verbose", is_flag=True, help="Shows verbose output.")
 @click.option(
     "-a",
     "--alt-range",
@@ -50,16 +38,36 @@ def apo_pointing_model(verbose: bool = False):
     show_default=True,
     help="Azimuth range.",
 )
+@click.option(
+    "--reuse/--no-reuse",
+    default=True,
+    is_flag=True,
+    help="Whether to reuse the grid from the input file, if it exists.",
+)
+@click.option(
+    "--overwrite",
+    is_flag=True,
+    help="Overwrites the output file if it exists.",
+)
 @cli_coro()
-async def run(
+async def apo_pointing_model(
     n_points: int | None,
     output_file: str,
     alt_range: tuple[float, float],
     az_range: tuple[float, float],
+    verbose: bool = False,
+    reuse: bool = True,
+    overwrite: bool = False,
 ):
-    """Collects APO pointing model data."""
+    """Command-line interface to the APO pointing model."""
 
+    from apo_pointing_model import log
     from apo_pointing_model.runner import get_pointing_data
+
+    if verbose:
+        log.sh.setLevel(logging.DEBUG)
+    else:
+        log.sh.setLevel(logging.INFO)
 
     path_ = pathlib.Path(output_file)
     if not path_.exists() and n_points is None:
@@ -72,4 +80,6 @@ async def run(
         output_file,
         alt_range=alt_range,
         az_range=az_range,
+        reuse_file=reuse,
+        overwrite=overwrite,
     )
