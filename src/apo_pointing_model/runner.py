@@ -14,7 +14,7 @@ import pathlib
 import polars
 from clu.legacy import TronConnection
 from clu.legacy.types.parser import Reply
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, create_model
 
 from sdsstools import get_sjd
 
@@ -61,7 +61,7 @@ PTCORR_COMMANDS = {
 }
 
 
-class PointingData(BaseModel):
+class PointingDataBase(BaseModel):
     """Pointing model data."""
 
     alt: float
@@ -124,6 +124,17 @@ async def get_pointing_data(
 
     """
 
+    ptcorr_fields = {}
+    for suffix in PTCORR_COMMANDS:
+        for key, value in PTCORR_SCHEMA.items():
+            ptcorr_fields[f"{key}{suffix}"] = (float | None, None)
+
+    PointingData = create_model(
+        "PointingData",
+        __base__=PointingDataBase,
+        **ptcorr_fields,
+    )
+
     output_file = pathlib.Path(output_file)
 
     if write_log:
@@ -136,7 +147,7 @@ async def get_pointing_data(
         data_df = polars.read_parquet(output_file)
         data = [PointingData(**row) for row in data_df.to_dicts()]
     else:
-        if overwrite is False:
+        if output_file.exists() and overwrite is False:
             raise FileExistsError("output_file exists and overwrite=False.")
 
         if npoints is None:
@@ -144,7 +155,7 @@ async def get_pointing_data(
 
         log.info("Generating new pointing model grid.")
         altaz = get_random_sample(npoints, alt_range=alt_range, az_range=az_range)
-        data: list[PointingData] = []
+        data: list[PointingDataBase] = []
         for alt, az in altaz:
             data.append(PointingData(alt=alt, az=az, rot=0.0))
 
@@ -299,7 +310,7 @@ async def get_pointing_data(
 
 
 def write_data(
-    data: list[PointingData],
+    data: list[PointingDataBase],
     output_file: pathlib.Path,
     write_csv: bool = True,
 ):
