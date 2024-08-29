@@ -55,9 +55,7 @@ PTCORR_SCHEMA: dict[str, polars.DataTypeClass] = {
 }
 
 PTCORR_COMMANDS = {
-    "": "ptcorr {ra_bore}, {dec_bore} icrs 0,0,0,0,{tai_ref} instrument",
-    "_512_512": "ptcorr {ra_bore}, {dec_bore} icrs 512,512,0,0,{tai_ref} instrument",
-    "_icrs": "ptcorr {ra}, {dec} icrs {ra_bore}, {dec_bore} icrs",
+    "": "ptcorr {ra_bore}, {dec_bore} icrs 0,0,0,0,{tai_ref} instrument"
 }
 
 
