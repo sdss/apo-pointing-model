@@ -7,12 +7,12 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import datetime
+
 import polars
 
 
 def getTpointHeader():
-    """Returns list of lines to include in TPOINT header
-    """
+    """Returns list of lines to include in TPOINT header"""
     currDateStr = datetime.datetime.now().isoformat()
     header = [
         "! Caption record:",
@@ -61,7 +61,8 @@ def processFiles(fileInputList, fileOutput):
 
     for ii in range(nGood):
         fileLines.append(
-            "%11.6f %11.6f %11.6f %11.6f %10.5f" % (
+            "%11.6f %11.6f %11.6f %11.6f %10.5f"
+            % (
                 desPhysAz[ii],
                 desPhysAlt[ii],
                 mountPosAz[ii],

@@ -24,8 +24,18 @@ def apo_pointing_model():
 
 
 @apo_pointing_model.command()
-@click.option("-i", "--input", multiple=True, type=click.Path(exists=True, dir_okay=False))
-@click.option("-o", "--output", multiple=False, type=click.Path(dir_okay=False))
+@click.option(
+    "-i",
+    "--input",
+    multiple=True,
+    type=click.Path(exists=True, dir_okay=False),
+)
+@click.option(
+    "-o",
+    "--output",
+    multiple=False,
+    type=click.Path(dir_okay=False),
+)
 def combine(
     input: list,
     output: str,
