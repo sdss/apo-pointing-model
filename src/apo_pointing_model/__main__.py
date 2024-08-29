@@ -16,7 +16,29 @@ import click
 from sdsstools.daemonizer import cli_coro
 
 
-@click.command()
+@click.group()
+@click.argument("OUTPUT_FILE", type=click.Path(dir_okay=True))
+def apo_pointing_model():
+    """Command-line interface to the APO pointing model."""
+
+    pass
+
+
+@apo_pointing_model.command()
+@click.option("-i", "--input", multiple=True, type=click.Path(exists=True, dir_okay=False))
+@click.option("-o", "--output", multiple=False, type=click.Path(dir_okay=False))
+def combine(
+    input: list,
+    output: str,
+):
+    """
+    Combine pointing data collection file(s) into file formatted for TPOINT
+    """
+    print("input", input)
+    print("output", output)
+
+
+@apo_pointing_model.command()
 @click.argument("OUTPUT_FILE", type=click.Path(dir_okay=True))
 @click.argument("N_POINTS", type=int, required=False)
 @click.option("-v", "--verbose", is_flag=True, help="Shows verbose output.")
@@ -50,7 +72,7 @@ from sdsstools.daemonizer import cli_coro
     help="Overwrites the output file if it exists.",
 )
 @cli_coro()
-async def apo_pointing_model(
+async def collect(
     n_points: int | None,
     output_file: str,
     alt_range: tuple[float, float],
@@ -59,7 +81,7 @@ async def apo_pointing_model(
     reuse: bool = True,
     overwrite: bool = False,
 ):
-    """Command-line interface to the APO pointing model."""
+    """Collects pointing model data."""
 
     from apo_pointing_model import log
     from apo_pointing_model.runner import get_pointing_data
