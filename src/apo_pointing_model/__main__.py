@@ -39,7 +39,7 @@ def combine(
     if len(input) == 0:
         print("must supply at least one input csv file")
         return
-    if len(output) is None:
+    if output is None:
         print("must supply a path for tpoint-formatted output file")
 
     processFiles(input, output)
