@@ -17,7 +17,6 @@ from sdsstools.daemonizer import cli_coro
 
 
 @click.group()
-@click.argument("OUTPUT_FILE", type=click.Path(dir_okay=True))
 def apo_pointing_model():
     """Command-line interface to the APO pointing model."""
 
