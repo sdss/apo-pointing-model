@@ -33,8 +33,16 @@ def combine(
     """
     Combine pointing data collection file(s) into file formatted for TPOINT
     """
-    print("input", input)
-    print("output", output)
+
+    from apo_pointing_model.combine import processFiles
+
+    if len(input) == 0:
+        print("must supply at least one input csv file")
+        return
+    if len(output) is None:
+        print("must supply a path for tpoint-formatted output file")
+
+    processFiles(input, output)
 
 
 @apo_pointing_model.command()
