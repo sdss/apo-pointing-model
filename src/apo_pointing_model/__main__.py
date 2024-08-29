@@ -41,6 +41,7 @@ def combine(
         return
     if output is None:
         print("must supply a path for tpoint-formatted output file")
+        return
 
     processFiles(input, output)
 
