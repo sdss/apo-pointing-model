@@ -54,9 +54,7 @@ PTCORR_SCHEMA: dict[str, polars.DataTypeClass] = {
     "ptdata_rotphys": polars.Float64,
 }
 
-PTCORR_COMMANDS = {
-    "": "ptcorr {ra_bore}, {dec_bore} icrs 0,0,0,0,{tai_ref} instrument"
-}
+PTCORR_COMMANDS = {"": "ptcorr {ra_bore}, {dec_bore} icrs 0,0,0,0,{tai_ref} instrument"}
 
 
 class PointingDataBase(BaseModel):
