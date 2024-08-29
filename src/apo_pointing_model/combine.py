@@ -50,7 +50,7 @@ def processFiles(fileInputList, fileOutput):
     nGood = len(df)
     print("using %i of %i pointings" % (nGood, nMeas))
 
-    # convert from tcc az convention to TPOINT az convention (N=90, E=0)
+    # convert from tcc az convention to TPOINT az convention (N=0, E=90)
     desPhysAz = 180 - df["ptdata_azphys"].to_numpy()
     desPhysAlt = df["ptdata_altphys"].to_numpy()
     mountPosAz = 180 - df["ptdata_azmount"].to_numpy()
