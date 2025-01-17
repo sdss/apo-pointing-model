@@ -51,7 +51,7 @@ def get_random_sample(
 
     points = numpy.zeros((0, 2), dtype=numpy.float64)
 
-    lco = EarthLocation.of_site("Las Campanas Observatory")
+    apo = EarthLocation.of_site("Apache Point Observatory")
     now = Time.now()
 
     while True:
@@ -59,7 +59,7 @@ def get_random_sample(
         altaz = AltAz(
             alt=sph_points.lat.deg * uu.deg,
             az=sph_points.lon.deg * uu.deg,
-            location=lco,
+            location=apo,
             obstime=now,
         )
 
